@@ -4,15 +4,24 @@
   "main": "index.js",
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "^2.2.0",
+    "@react-native-picker/picker": "^2.11.1",
     "expo": "~53.0.22",
+    "expo-file-system": "^18.1.11",
+    "expo-font": "~13.3.2",
+    "expo-print": "^14.1.4",
+    "expo-sharing": "^13.1.5",
+    "expo-splash-screen": "^0.30.10",
     "expo-status-bar": "~2.2.3",
+    "prop-types": "^15.8.1",
     "react": "19.0.0",
-    "react-native": "0.79.6"
+    "react-native": "0.79.6",
+    "react-native-element-dropdown": "^2.12.4"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"
