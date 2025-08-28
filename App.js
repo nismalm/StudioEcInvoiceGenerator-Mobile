@@ -13,6 +13,7 @@ import {
   Modal,
   StatusBar,
   Platform,
+  useColorScheme,
 } from 'react-native';
 import {Picker} from '@react-native-picker/picker';
 import { Dropdown } from 'react-native-element-dropdown';
@@ -30,6 +31,10 @@ const base64Logo = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABd0AAAXcCAYAAA
 const { width, height } = Dimensions.get('window');
 
 const App = () => {
+  // Color scheme detection
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  
   // Main app state
   const [currentPage, setCurrentPage] = useState('main'); // 'main' or 'projects'
   const [projects, setProjects] = useState([]);
@@ -552,53 +557,70 @@ const App = () => {
       } else {
         Alert.alert('Success', `PDF generated successfully!\nSaved to: Documents/${fileName}`);
       }
+
+      // Clear all fields to default state after successful generation
+      clearAllFields();
     } catch (error) {
       console.error('PDF generation error:', error);
       Alert.alert('Error', 'Failed to generate PDF. Please try again.\nError: ' + error.message);
     }
   };
 
+  // Clear all fields to default state
+  const clearAllFields = () => {
+    // Reset document fields
+    setDocumentType('Invoice');
+    setDocTypePrefix('INV');
+    
+    // Reset form fields but keep selected project
+    setYear(new Date().getFullYear().toString());
+    setReceiptNumber('01');
+    setBillTo('');
+    setItems([{ description: '', quantity: '', price: '', tax: '', amount: 0 }]);
+    setNotes('');
+  };
+
   // Project Management Page
   const renderProjectManagement = () => (
-    <View style={styles.pageContainer}>
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.header}>
+    <View style={dynamicStyles.pageContainer}>
+      <SafeAreaView style={dynamicStyles.safeArea}>
+        <View style={dynamicStyles.header}>
           <TouchableOpacity 
             onPress={() => {
               setCurrentPage('main');
             }} 
-            style={styles.modernBackButton}
+            style={dynamicStyles.modernBackButton}
             activeOpacity={0.7}
             hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
           >
-            <Text style={styles.modernBackButtonIcon}>‹</Text>
-            <Text style={styles.modernBackButtonText}>Back</Text>
+            <Text style={dynamicStyles.modernBackButtonIcon}>‹</Text>
+            <Text style={dynamicStyles.modernBackButtonText}>Back</Text>
           </TouchableOpacity>
-          <Text style={styles.pageTitle}>Manage Projects</Text>
+          <Text style={dynamicStyles.pageTitle}>Manage Projects</Text>
         </View>
 
       <TouchableOpacity 
         onPress={() => setShowProjectModal(true)} 
-        style={styles.addProjectButton}
+        style={dynamicStyles.addProjectButton}
       >
-        <Text style={styles.addProjectButtonText}>+ Add New Project</Text>
+        <Text style={dynamicStyles.addProjectButtonText}>+ Add New Project</Text>
       </TouchableOpacity>
 
-      <ScrollView style={styles.projectsList}>
+      <ScrollView style={dynamicStyles.projectsList}>
         {projects.map((project) => (
-          <View key={project.id} style={styles.projectItem}>
-            <View style={styles.projectInfo}>
-              <Text style={styles.projectTitle}>{project.projectName}</Text>
-              <Text style={styles.projectSubtitle}>Owner: {project.ownerName}</Text>
-              <Text style={styles.projectSubtitle}>Place: {project.projectPlace}</Text>
-              <Text style={styles.projectSubtitle}>Project #: {project.projectNumber}</Text>
-              <Text style={styles.projectSubtitle}>Type: {project.projectType === 'RP' ? 'Residential' : project.projectType === 'CP' ? 'Commercial' : 'Community'}</Text>
+          <View key={project.id} style={dynamicStyles.projectItem}>
+            <View style={dynamicStyles.projectInfo}>
+              <Text style={dynamicStyles.projectTitle}>{project.projectName}</Text>
+              <Text style={dynamicStyles.projectSubtitle}>Owner: {project.ownerName}</Text>
+              <Text style={dynamicStyles.projectSubtitle}>Place: {project.projectPlace}</Text>
+              <Text style={dynamicStyles.projectSubtitle}>Project #: {project.projectNumber}</Text>
+              <Text style={dynamicStyles.projectSubtitle}>Type: {project.projectType === 'RP' ? 'Residential' : project.projectType === 'CP' ? 'Commercial' : 'Community'}</Text>
             </View>
             <TouchableOpacity 
               onPress={() => removeProject(project.id)} 
-              style={styles.deleteButton}
+              style={dynamicStyles.deleteButton}
             >
-              <Text style={styles.deleteButtonText}>Delete</Text>
+              <Text style={dynamicStyles.deleteButtonText}>Delete</Text>
             </TouchableOpacity>
           </View>
         ))}
@@ -610,73 +632,82 @@ const App = () => {
         transparent={true}
         animationType="slide"
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Add New Project</Text>
+        <View style={dynamicStyles.modalContainer}>
+          <View style={dynamicStyles.modalContent}>
+            <Text style={dynamicStyles.modalTitle}>Add New Project</Text>
 
-            <Text style={styles.label}>Project Type *</Text>
+            <Text style={dynamicStyles.label}>Project Type *</Text>
             <Dropdown
-              style={[styles.elementDropdown, {marginBottom: 16}]}
-              placeholderStyle={styles.elementPlaceholderText}
-              selectedTextStyle={styles.elementSelectedText}
-              containerStyle={styles.elementDropdownContainer}
-              itemTextStyle={styles.elementItemText}
+              style={[dynamicStyles.elementDropdown, {marginBottom: 16}]}
+              placeholderStyle={dynamicStyles.elementPlaceholderText}
+              selectedTextStyle={dynamicStyles.elementSelectedText}
+              containerStyle={dynamicStyles.elementDropdownContainer}
+              itemTextStyle={dynamicStyles.elementItemText}
+            itemContainerStyle={dynamicStyles.elementItemContainer}
+              itemContainerStyle={dynamicStyles.elementItemContainer}
+              activeColor={isDark ? '#333' : '#f0f0f0'}
               data={newProjectTypeItems}
               maxHeight={300}
               labelField="label"
               valueField="value"
+              placeholderTextColor={isDark ? '#888' : '#999'}
               placeholder="Select project type..."
               value={newProject.projectType || 'RP'}
               onChange={(item) => {
                 setNewProject({...newProject, projectType: item.value});
               }}
               renderRightIcon={() => (
-                <Text style={styles.elementDropdownIcon}>▼</Text>
+                <Text style={dynamicStyles.elementDropdownIcon}>▼</Text>
               )}
             />
 
             <TextInput
-              style={styles.input}
+              style={dynamicStyles.input}
+              placeholderTextColor={isDark ? '#888' : '#999'}
               placeholder="Project Number * (e.g., 010)"
+              placeholderTextColor={isDark ? '#888' : '#999'}
               value={newProject.projectNumber}
               onChangeText={(text) => setNewProject({...newProject, projectNumber: text})}
               keyboardType="numeric"
             />
 
             <TextInput
-              style={styles.input}
+              style={dynamicStyles.input}
+              placeholderTextColor={isDark ? '#888' : '#999'}
               placeholder="Project Name *"
               value={newProject.projectName}
               onChangeText={(text) => setNewProject({...newProject, projectName: text})}
             />
             
             <TextInput
-              style={styles.input}
+              style={dynamicStyles.input}
+              placeholderTextColor={isDark ? '#888' : '#999'}
               placeholder="Project Owner Name *"
               value={newProject.ownerName}
               onChangeText={(text) => setNewProject({...newProject, ownerName: text})}
             />
             
             <TextInput
-              style={styles.input}
+              style={dynamicStyles.input}
+              placeholderTextColor={isDark ? '#888' : '#999'}
               placeholder="Project Place"
               value={newProject.projectPlace}
               onChangeText={(text) => setNewProject({...newProject, projectPlace: text})}
             />
 
-            <View style={styles.modalButtons}>
+            <View style={dynamicStyles.modalButtons}>
               <TouchableOpacity 
                 onPress={() => setShowProjectModal(false)} 
-                style={[styles.modalButton, styles.cancelButton]}
+                style={[dynamicStyles.modalButton, dynamicStyles.cancelButton]}
               >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
+                <Text style={dynamicStyles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
               
               <TouchableOpacity 
                 onPress={addProject} 
-                style={[styles.modalButton, styles.saveButton]}
+                style={[dynamicStyles.modalButton, dynamicStyles.saveButton]}
               >
-                <Text style={styles.saveButtonText}>Add Project</Text>
+                <Text style={dynamicStyles.saveButtonText}>Add Project</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -695,26 +726,27 @@ const App = () => {
 
   // Main Generator Page
   const renderMainPage = () => (
-    <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
-        <Text style={styles.title}>Receipt/Invoice Generator</Text>
+    <SafeAreaView style={dynamicStyles.container}>
+      <ScrollView style={dynamicStyles.scrollView} contentContainerStyle={dynamicStyles.contentContainer}>
+        <Text style={dynamicStyles.title}>Receipt/Invoice Generator</Text>
         
         <TouchableOpacity 
           onPress={() => setCurrentPage('projects')} 
-          style={styles.manageProjectsButton}
+          style={dynamicStyles.manageProjectsButton}
         >
-          <Text style={styles.manageProjectsButtonText}>Manage Projects</Text>
+          <Text style={dynamicStyles.manageProjectsButtonText}>Manage Projects</Text>
         </TouchableOpacity>
 
         {/* Project Selection */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Project Selection</Text>
+        <View style={dynamicStyles.section}>
+          <Text style={dynamicStyles.sectionTitle}>Project Selection</Text>
           <Dropdown
-            style={styles.elementDropdown}
-            placeholderStyle={styles.elementPlaceholderText}
-            selectedTextStyle={styles.elementSelectedText}
-            containerStyle={styles.elementDropdownContainer}
-            itemTextStyle={styles.elementItemText}
+            style={dynamicStyles.elementDropdown}
+            placeholderStyle={dynamicStyles.elementPlaceholderText}
+            selectedTextStyle={dynamicStyles.elementSelectedText}
+            containerStyle={dynamicStyles.elementDropdownContainer}
+            itemTextStyle={dynamicStyles.elementItemText}
+            itemContainerStyle={dynamicStyles.elementItemContainer}
             data={[
               { label: 'Select a project...', value: null },
               ...projects.map(project => ({
@@ -744,20 +776,22 @@ const App = () => {
               }
             }}
             renderRightIcon={() => (
-              <Text style={styles.elementDropdownIcon}>▼</Text>
+              <Text style={dynamicStyles.elementDropdownIcon}>▼</Text>
             )}
+            activeColor={isDark ? '#333' : '#f0f0f0'}
           />
         </View>
 
         {/* Document Type */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Document Type</Text>
+        <View style={dynamicStyles.section}>
+          <Text style={dynamicStyles.sectionTitle}>Document Type</Text>
           <Dropdown
-            style={styles.elementDropdown}
-            placeholderStyle={styles.elementPlaceholderText}
-            selectedTextStyle={styles.elementSelectedText}
-            containerStyle={styles.elementDropdownContainer}
-            itemTextStyle={styles.elementItemText}
+            style={dynamicStyles.elementDropdown}
+            placeholderStyle={dynamicStyles.elementPlaceholderText}
+            selectedTextStyle={dynamicStyles.elementSelectedText}
+            containerStyle={dynamicStyles.elementDropdownContainer}
+            itemTextStyle={dynamicStyles.elementItemText}
+            itemContainerStyle={dynamicStyles.elementItemContainer}
             data={docTypeItems}
             maxHeight={300}
             labelField="label"
@@ -769,21 +803,22 @@ const App = () => {
               setDocTypePrefix(item.value === 'Invoice' ? 'INV' : 'REC');
             }}
             renderRightIcon={() => (
-              <Text style={styles.elementDropdownIcon}>▼</Text>
+              <Text style={dynamicStyles.elementDropdownIcon}>▼</Text>
             )}
+            activeColor={isDark ? '#333' : '#f0f0f0'}
           />
         </View>
 
         {/* Document Number */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Document Number</Text>
-          <Text style={styles.documentNumber}>{generateInvoiceNumber()}</Text>
+        <View style={dynamicStyles.section}>
+          <Text style={dynamicStyles.sectionTitle}>Document Number</Text>
+          <Text style={dynamicStyles.documentNumber}>{generateInvoiceNumber()}</Text>
           
-          <View style={styles.row}>
-            <View style={styles.halfWidth}>
-              <Text style={styles.label}>Year</Text>
+          <View style={dynamicStyles.row}>
+            <View style={dynamicStyles.halfWidth}>
+              <Text style={dynamicStyles.label}>Year</Text>
               <TextInput
-                style={styles.input}
+                style={dynamicStyles.input}
                 value={year}
                 onChangeText={setYear}
                 keyboardType="numeric"
@@ -791,117 +826,123 @@ const App = () => {
               />
             </View>
             
-            <View style={styles.halfWidth}>
-              <Text style={styles.label}>Receipt Number</Text>
+            <View style={dynamicStyles.halfWidth}>
+              <Text style={dynamicStyles.label}>Receipt Number</Text>
               <TextInput
-                style={styles.input}
+                style={dynamicStyles.input}
                 value={receiptNumber}
                 onChangeText={setReceiptNumber}
                 keyboardType="numeric"
-                placeholder="01"
+                placeholderTextColor={isDark ? '#888' : '#999'}
+              placeholder="01"
               />
             </View>
           </View>
         </View>
 
         {/* Basic Information */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Basic Information</Text>
-          <Text style={styles.autoFillText}>Date: {new Date().toLocaleDateString('en-GB')}</Text>
+        <View style={dynamicStyles.section}>
+          <Text style={dynamicStyles.sectionTitle}>Basic Information</Text>
+          <Text style={dynamicStyles.autoFillText}>Date: {new Date().toLocaleDateString('en-GB')}</Text>
           
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Bill To</Text>
+          <View style={dynamicStyles.inputContainer}>
+            <Text style={dynamicStyles.label}>Bill To</Text>
             <TextInput
-              style={styles.input}
+              style={dynamicStyles.input}
               value={billTo}
               onChangeText={setBillTo}
+              placeholderTextColor={isDark ? '#888' : '#999'}
               placeholder="Client Name"
             />
           </View>
           
-          <Text style={styles.autoFillText}>Project: {selectedProject?.projectName || 'No project selected'}</Text>
+          <Text style={dynamicStyles.autoFillText}>Project: {selectedProject?.projectName || 'No project selected'}</Text>
         </View>
 
         {/* Items */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Items</Text>
+        <View style={dynamicStyles.section}>
+          <Text style={dynamicStyles.sectionTitle}>Items</Text>
           
           {items.map((item, index) => (
-            <View key={index} style={styles.itemContainer}>
-              <View style={styles.itemHeader}>
-                <Text style={styles.itemTitle}>Item {index + 1}</Text>
+            <View key={index} style={dynamicStyles.itemContainer}>
+              <View style={dynamicStyles.itemHeader}>
+                <Text style={dynamicStyles.itemTitle}>Item {index + 1}</Text>
                 {items.length > 1 && (
-                  <TouchableOpacity onPress={() => removeItem(index)} style={styles.removeButton}>
-                    <Text style={styles.removeButtonText}>Remove</Text>
+                  <TouchableOpacity onPress={() => removeItem(index)} style={dynamicStyles.removeButton}>
+                    <Text style={dynamicStyles.removeButtonText}>Remove</Text>
                   </TouchableOpacity>
                 )}
               </View>
               
               <TextInput
-                style={[styles.input, styles.textArea]}
+                style={[dynamicStyles.input, dynamicStyles.textArea]}
                 value={item.description}
                 onChangeText={(value) => updateItem(index, 'description', value)}
-                placeholder="Description"
+                placeholderTextColor={isDark ? '#888' : '#999'}
+              placeholder="Description"
                 multiline
                 numberOfLines={3}
               />
               
-              <View style={styles.row}>
-                <View style={styles.quarterWidth}>
-                  <Text style={styles.label}>Quantity</Text>
+              <View style={dynamicStyles.row}>
+                <View style={dynamicStyles.quarterWidth}>
+                  <Text style={dynamicStyles.label}>Quantity</Text>
                   <TextInput
-                    style={styles.input}
+                    style={dynamicStyles.input}
                     value={item.quantity}
                     onChangeText={(value) => updateItem(index, 'quantity', value)}
-                    placeholder="1"
+                    placeholderTextColor={isDark ? '#888' : '#999'}
+              placeholder="0"
                     keyboardType="numeric"
                   />
                 </View>
                 
-                <View style={styles.quarterWidth}>
-                  <Text style={styles.label}>Price (₹)</Text>
+                <View style={dynamicStyles.quarterWidth}>
+                  <Text style={dynamicStyles.label}>Price (₹)</Text>
                   <TextInput
-                    style={styles.input}
+                    style={dynamicStyles.input}
                     value={item.price}
                     onChangeText={(value) => updateItem(index, 'price', value)}
-                    placeholder="0"
+                    placeholderTextColor={isDark ? '#888' : '#999'}
+              placeholder="0"
                     keyboardType="numeric"
                   />
                 </View>
                 
-                <View style={styles.quarterWidth}>
-                  <Text style={styles.label}>Tax (₹)</Text>
+                <View style={dynamicStyles.quarterWidth}>
+                  <Text style={dynamicStyles.label}>Tax (₹)</Text>
                   <TextInput
-                    style={styles.input}
+                    style={dynamicStyles.input}
                     value={item.tax}
                     onChangeText={(value) => updateItem(index, 'tax', value)}
-                    placeholder="0"
+                    placeholderTextColor={isDark ? '#888' : '#999'}
+              placeholder="0"
                     keyboardType="numeric"
                   />
                 </View>
                 
-                <View style={styles.quarterWidth}>
-                  <Text style={styles.label}>Amount</Text>
-                  <Text style={styles.amountText}>₹ {item.amount.toFixed(0)}</Text>
+                <View style={dynamicStyles.quarterWidth}>
+                  <Text style={dynamicStyles.label}>Amount</Text>
+                  <Text style={dynamicStyles.amountText}>₹ {item.amount.toFixed(0)}</Text>
                 </View>
               </View>
             </View>
           ))}
           
-          <TouchableOpacity onPress={addItem} style={styles.addButton}>
-            <Text style={styles.addButtonText}>Add Item</Text>
+          <TouchableOpacity onPress={addItem} style={dynamicStyles.addButton}>
+            <Text style={dynamicStyles.addButtonText}>Add Item</Text>
           </TouchableOpacity>
           
-          <View style={styles.totalContainer}>
-            <Text style={styles.totalText}>Total: ₹ {calculateTotal().toLocaleString()}</Text>
+          <View style={dynamicStyles.totalContainer}>
+            <Text style={dynamicStyles.totalText}>Total: ₹ {calculateTotal().toLocaleString()}</Text>
           </View>
         </View>
 
         {/* Notes */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Notes</Text>
+        <View style={dynamicStyles.section}>
+          <Text style={dynamicStyles.sectionTitle}>Notes</Text>
           <TextInput
-            style={[styles.input, styles.textArea]}
+            style={[dynamicStyles.input, dynamicStyles.textArea]}
             value={notes}
             onChangeText={setNotes}
             placeholder="Add any additional notes here..."
@@ -911,19 +952,22 @@ const App = () => {
         </View>
 
         {/* Generate PDF Button */}
-        <TouchableOpacity onPress={generatePDF} style={styles.generateButton}>
-          <Text style={styles.generateButtonText}>Generate PDF</Text>
+        <TouchableOpacity onPress={generatePDF} style={dynamicStyles.generateButton}>
+          <Text style={dynamicStyles.generateButtonText}>Generate PDF</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
 
+  // Create dynamic styles based on theme
+  const dynamicStyles = createStyles(isDark);
+  
   // Main return - switch between pages
   return (
     <>
       <StatusBar 
-        barStyle="dark-content" 
-        backgroundColor="#f5f5f5" 
+        barStyle={isDark ? "light-content" : "dark-content"}
+        backgroundColor={isDark ? "#1a1a1a" : "#f5f5f5"}
         translucent={false}
       />
       {currentPage === 'projects' ? renderProjectManagement() : renderMainPage()}
@@ -931,10 +975,10 @@ const App = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (isDark) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: isDark ? '#1a1a1a' : '#f5f5f5',
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   scrollView: {
@@ -949,7 +993,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 12,
-    color: '#333',
+    color: isDark ? '#fff' : '#333',
     fontFamily: 'Satoshi-Bold',
   },
   manageProjectsButton: {
@@ -968,9 +1012,9 @@ const styles = StyleSheet.create({
   // Native iOS-style Picker styles
   nativePickerTrigger: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: isDark ? '#444' : '#ddd',
     borderRadius: 8,
-    backgroundColor: 'white',
+    backgroundColor: isDark ? '#2a2a2a' : 'white',
     padding: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -984,7 +1028,7 @@ const styles = StyleSheet.create({
   },
   nativePickerText: {
     fontSize: 16,
-    color: '#333',
+    color: isDark ? '#fff' : '#333',
     fontFamily: 'Satoshi-Regular',
     flex: 1,
   },
@@ -997,7 +1041,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   nativePickerContainer: {
-    backgroundColor: 'white',
+    backgroundColor: isDark ? '#2a2a2a' : 'white',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     paddingBottom: 20,
@@ -1007,7 +1051,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: isDark ? '#444' : '#e0e0e0',
   },
   nativePickerDone: {
     fontSize: 16,
@@ -1024,10 +1068,10 @@ const styles = StyleSheet.create({
   elementDropdown: {
     height: 56,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: isDark ? '#444' : '#ddd',
     borderRadius: 8,
     paddingHorizontal: 16,
-    backgroundColor: 'white',
+    backgroundColor: isDark ? '#2a2a2a' : 'white',
     elevation: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -1036,16 +1080,16 @@ const styles = StyleSheet.create({
   },
   elementPlaceholderText: {
     fontSize: 16,
-    color: '#999',
+    color: isDark ? '#888' : '#999',
     fontFamily: 'Satoshi-Regular',
   },
   elementSelectedText: {
     fontSize: 16,
-    color: '#333',
+    color: isDark ? '#fff' : '#333',
     fontFamily: 'Satoshi-Regular',
   },
   elementDropdownContainer: {
-    backgroundColor: 'white',
+    backgroundColor: isDark ? '#2a2a2a' : 'white',
     borderRadius: 8,
     elevation: 5,
     shadowColor: '#000',
@@ -1053,25 +1097,35 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 4,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: isDark ? '#444' : '#ddd',
   },
   elementItemText: {
     fontSize: 16,
-    color: '#333',
+    color: isDark ? '#fff' : '#333',
     fontFamily: 'Satoshi-Regular',
-    paddingVertical: 12,
+    paddingVertical: 8,
+  },
+  elementItemContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: isDark ? '#2a2a2a' : 'white',
+    borderBottomWidth: 0.5,
+    borderBottomColor: isDark ? '#444' : '#eee',
+  },
+  elementActiveItem: {
+    backgroundColor: isDark ? '#333' : '#f0f0f0',
   },
   elementDropdownIcon: {
     fontSize: 12,
-    color: '#666',
+    color: isDark ? '#aaa' : '#666',
   },
 
   // Legacy Simple Dropdown styles (can be removed later)
   simpleDropdownTrigger: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: isDark ? '#444' : '#ddd',
     borderRadius: 8,
-    backgroundColor: 'white',
+    backgroundColor: isDark ? '#2a2a2a' : 'white',
     padding: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1085,14 +1139,14 @@ const styles = StyleSheet.create({
   },
   simpleDropdownText: {
     fontSize: 16,
-    color: '#333',
+    color: isDark ? '#fff' : '#333',
     fontFamily: 'Satoshi-Regular',
     flex: 1,
   },
   simpleDropdownList: {
-    backgroundColor: 'white',
+    backgroundColor: isDark ? '#2a2a2a' : 'white',
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: isDark ? '#444' : '#ddd',
     borderTopWidth: 0,
     borderBottomLeftRadius: 8,
     borderBottomRightRadius: 8,
@@ -1107,14 +1161,14 @@ const styles = StyleSheet.create({
     padding: 4,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
-    backgroundColor: 'white',
+    backgroundColor: isDark ? '#2a2a2a' : 'white',
   },
   simpleDropdownItemSelected: {
-    backgroundColor: '#e8f0fe',
+    backgroundColor: isDark ? '#1a2332' : '#e8f0fe',
   },
   simpleDropdownItemText: {
     fontSize: 16,
-    color: '#333',
+    color: isDark ? '#fff' : '#333',
     fontFamily: 'Satoshi-Regular',
   },
   simpleDropdownItemTextSelected: {
@@ -1125,7 +1179,7 @@ const styles = StyleSheet.create({
   // Dropdown arrow (shared)
   dropdownArrow: {
     fontSize: 12,
-    color: '#666',
+    color: isDark ? '#aaa' : '#666',
     marginLeft: 10,
     transform: [{ rotate: '0deg' }],
   },
@@ -1135,7 +1189,7 @@ const styles = StyleSheet.create({
   // Project Management Page styles
   pageContainer: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: isDark ? '#2a2a2a' : '#f5f5f5',
   },
   safeArea: {
     flex: 1,
@@ -1146,9 +1200,9 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 12 : 12,
     paddingBottom: 12,
     paddingHorizontal: 16,
-    backgroundColor: 'white',
+    backgroundColor: isDark ? '#2a2a2a' : 'white',
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: isDark ? '#444' : '#e0e0e0',
   },
   modernBackButton: {
     flexDirection: 'row',
@@ -1193,7 +1247,7 @@ const styles = StyleSheet.create({
   pageTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: isDark ? '#fff' : '#333',
     flex: 1,
     fontFamily: 'Satoshi-Bold',
   },
@@ -1214,7 +1268,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   projectItem: {
-    backgroundColor: 'white',
+    backgroundColor: isDark ? '#2a2a2a' : 'white',
     padding: 16,
     marginBottom: 12,
     borderRadius: 8,
@@ -1233,12 +1287,12 @@ const styles = StyleSheet.create({
   projectTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: isDark ? '#fff' : '#333',
     marginBottom: 4,
   },
   projectSubtitle: {
     fontSize: 14,
-    color: '#666',
+    color: isDark ? '#aaa' : '#666',
     marginBottom: 2,
   },
   deleteButton: {
@@ -1260,7 +1314,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: 'white',
+    backgroundColor: isDark ? '#2a2a2a' : 'white',
     padding: 24,
     borderRadius: 12,
     width: '90%',
@@ -1269,7 +1323,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: isDark ? '#fff' : '#333',
     marginBottom: 20,
     textAlign: 'center',
   },
@@ -1286,7 +1340,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   cancelButton: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: isDark ? '#2a2a2a' : '#F3F4F6',
     borderWidth: 1,
     borderColor: '#D1D5DB',
   },
@@ -1304,7 +1358,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   section: {
-    backgroundColor: 'white',
+    backgroundColor: isDark ? '#2a2a2a' : 'white',
     borderRadius: 8,
     padding: 14,
     marginBottom: 8,
@@ -1327,17 +1381,18 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: isDark ? '#fff' : '#333',
     marginBottom: 4,
     fontFamily: 'Satoshi-Medium',
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: isDark ? '#444' : '#ddd',
     borderRadius: 4,
     padding: 10,
     fontSize: 16,
-    backgroundColor: 'white',
+    backgroundColor: isDark ? '#2a2a2a' : 'white',
+    color: isDark ? '#fff' : '#333',
     fontFamily: 'Satoshi-Regular',
   },
   textArea: {
@@ -1346,9 +1401,9 @@ const styles = StyleSheet.create({
   },
   pickerContainer: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: isDark ? '#444' : '#ddd',
     borderRadius: 4,
-    backgroundColor: 'white',
+    backgroundColor: isDark ? '#2a2a2a' : 'white',
   },
   picker: {
     height: 50,
@@ -1367,27 +1422,27 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     textAlign: 'center',
-    color: '#333',
-    backgroundColor: '#f0f0f0',
+    color: isDark ? '#fff' : '#333',
+    backgroundColor: isDark ? '#333' : '#f0f0f0',
     padding: 12,
     borderRadius: 4,
     marginBottom: 16,
   },
   autoFillText: {
     fontSize: 16,
-    color: '#666',
-    backgroundColor: '#f9f9f9',
+    color: isDark ? '#aaa' : '#666',
+    backgroundColor: isDark ? '#333' : '#f9f9f9',
     padding: 8,
     borderRadius: 4,
     marginBottom: 8,
   },
   itemContainer: {
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: isDark ? '#444' : '#e0e0e0',
     borderRadius: 4,
     padding: 12,
     marginBottom: 12,
-    backgroundColor: '#fafafa',
+    backgroundColor: isDark ? '#333' : '#fafafa',
   },
   itemHeader: {
     flexDirection: 'row',
@@ -1398,7 +1453,7 @@ const styles = StyleSheet.create({
   itemTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
+    color: isDark ? '#fff' : '#333',
   },
   removeButton: {
     backgroundColor: '#ff4444',
@@ -1414,11 +1469,11 @@ const styles = StyleSheet.create({
   amountText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
+    color: isDark ? '#fff' : '#333',
     textAlign: 'center',
     marginTop: 8,
     padding: 8,
-    backgroundColor: '#e8f5e8',
+    backgroundColor: isDark ? '#1a3320' : '#e8f5e8',
     borderRadius: 4,
   },
   addButton: {
