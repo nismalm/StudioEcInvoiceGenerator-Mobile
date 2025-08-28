@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Studio EC Invoice Generator",
+    "name": "studio.ec invoice generator",
     "slug": "StudioECInvoiceGenerator",
     "version": "1.0.0",
     "orientation": "portrait",
